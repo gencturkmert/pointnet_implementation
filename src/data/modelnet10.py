@@ -4,26 +4,36 @@ import numpy as np
 import zipfile
 import urllib.request
 from torch.utils.data import Dataset
+from sklearn.model_selection import train_test_split
 
 class ModelNet10Dataset(Dataset):
-    def __init__(self, root_dir, categories=None, num_points=1024, download=True, augment=False):
+    def __init__(self, root_dir, num_points=1024, download=True, augment=False, split='train', split_ratio=0.8):
         self.root_dir = root_dir
-        self.categories = categories
         self.num_points = num_points
         self.augment = augment
-        self.url = "http://3dvision.princeton.edu/projects/2014/3DShapeNets/ModelNet10.zip"
+        self.split = split
+        self.filepaths = []
 
         if download:
             self.download()
 
-        self.filepaths = []
-        if self.categories is None:
-            self.categories = [folder for folder in os.listdir(os.path.join(self.root_dir, "ModelNet10")) if os.path.isdir(os.path.join(self.root_dir, "ModelNet10", folder))]
-
-        for category in self.categories:
+        # Load all filepaths initially
+        temp_filepaths = []
+        categories = [folder for folder in os.listdir(os.path.join(self.root_dir, "ModelNet10")) if os.path.isdir(os.path.join(self.root_dir, "ModelNet10", folder))]
+        for category in categories:
             folder = os.path.join(self.root_dir, "ModelNet10", category, 'train')
             files = [os.path.join(folder, file) for file in os.listdir(folder) if file.endswith('.off')]
-            self.filepaths.extend(files)
+            temp_filepaths.extend(files)
+
+        # Split the data
+        train_paths, test_paths = train_test_split(temp_filepaths, train_size=split_ratio, test_size=1-split_ratio, random_state=42)
+        if split == 'train':
+            self.filepaths = train_paths
+        elif split == 'test':
+            self.filepaths = test_paths
+        elif split == 'validate':
+            # Further split the train_paths for validation
+            self.filepaths, _ = train_test_split(train_paths, train_size=split_ratio, test_size=1-split_ratio, random_state=42)
 
     def download(self):
         if not os.path.exists(self.root_dir):
@@ -67,7 +77,6 @@ class ModelNet10Dataset(Dataset):
         return points[idx]
 
     def augment_points(self, points):
-        # Rotate the point cloud about the z-axis
         angle = np.random.uniform(0, 2 * np.pi)
         rotation_matrix = np.array([
             [np.cos(angle), -np.sin(angle), 0],
