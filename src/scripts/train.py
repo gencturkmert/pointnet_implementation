@@ -137,4 +137,4 @@ print(f"Test Accuracy: {test_accuracy}%")
 
 save_confusion_matrix(all_labels, all_preds, categories=train_dataset.categories,run_name=run_name,dir_path=dir_path)
 
-torch.save(best_model, f"{dir_path}/results/{run_name}/pointnet_model.pth")
+torch.save(best_model, f"{dir_path}/{run_name}/pointnet_model.pth")
