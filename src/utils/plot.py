@@ -3,13 +3,12 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
 
-def save_confusion_matrix(all_labels, all_preds, categories, run_name):
+def save_confusion_matrix(all_labels, all_preds, categories,run_name, dir_path):
     # Calculate the confusion matrix
     cm = confusion_matrix(all_labels, all_preds)
 
-    # Create directory for the run
-    results_dir = f'../results/{run_name}/plots'
-    os.makedirs(results_dir, exist_ok=True)
+    # Ensure the directory exists
+    os.makedirs(dir_path, exist_ok=True)
     
     # Plotting the confusion matrix
     plt.figure(figsize=(10, 8))
@@ -19,15 +18,10 @@ def save_confusion_matrix(all_labels, all_preds, categories, run_name):
     plt.xlabel('Predicted')
     
     # Save the plot
-    plt.savefig(f'{results_dir}/confusion_matrix.png')
+    plt.savefig(os.path.join(dir_path, f'/{run_name}/results/confusion_matrix.png'))
     plt.close()
     
-    
-def save_plot_loss_acc(train_accuracies, val_accuracies, run_name):
-    # Create directory for the run
-    results_dir = f'../results/{run_name}/plots'
-    os.makedirs(results_dir, exist_ok=True)
-
+def save_plot_loss_acc(train_accuracies, val_accuracies, run_name,dir_path):
     plt.figure(figsize=(10, 5))
     plt.plot(train_accuracies, label='Train Accuracy')
     plt.plot(val_accuracies, label='Validation Accuracy')
@@ -37,6 +31,5 @@ def save_plot_loss_acc(train_accuracies, val_accuracies, run_name):
     plt.legend()
     
     # Save the plot
-    plt.savefig(f'{results_dir}/accuracy_plot.png')
+    plt.savefig(os.path.join(dir_path, f'/{run_name}/results/accuracy_plot.png'))
     plt.close()
-

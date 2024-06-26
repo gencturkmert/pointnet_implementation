@@ -11,23 +11,30 @@ from data.modelnet40 import *
 from model.pointnet import *
 from utils.plot import *
 
+
 # Parameters
 num_points = 2048  # number of points in each sample
 num_classes = 40   # number of output classes
 batch_size = 32
 epochs = 100
 dataset = "modelnet10"
-
+dir_path = "/content/drive/MyDrive/pointnet_torch"
+data_dir = f'{dir_path}/data'
 run_name = f"pointnet_{dataset}_{num_points}_{batch_size}_{epochs}"
 
+os.makedirs(f"{dir_path}", exist_ok=True)
+os.makedirs(f"{dir_path}/{run_name}", exist_ok=True)
+os.makedirs(f"{dir_path}/{run_name}/results", exist_ok=True)
+
+
 # Create dataset instances for train, validation, and test
-train_dataset = ModelNet10Dataset(root_dir='ModelNet10', num_points=num_points, split='train', split_ratio=0.8)
+train_dataset = ModelNet10Dataset(root_dir=data_dir, num_points=num_points, split='train', split_ratio=0.8)
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
-val_dataset = ModelNet10Dataset(root_dir='ModelNet10', num_points=num_points, split='validate', split_ratio=0.8)
+val_dataset = ModelNet10Dataset(root_dir=data_dir, num_points=num_points, split='validate', split_ratio=0.8)
 val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
 
-test_dataset = ModelNet10Dataset(root_dir='ModelNet10', num_points=num_points, split='test', split_ratio=0.8)
+test_dataset = ModelNet10Dataset(root_dir=data_dir, num_points=num_points, split='test', split_ratio=0.8)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
 
 # Create model, loss, and optimizer instances
@@ -35,28 +42,6 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = PointNet(num_points=num_points, num_classes=num_classes).to(device)
 criterion = nn.CrossEntropyLoss()  # appropriate loss for classification
 optimizer = optim.Adam(model.parameters(), lr=0.001)
-
-
-def train_one_epoch(epoch_index, train_loader):
-    model.train()
-    running_loss = 0.0
-    start_time = time.time()
-
-    for batch_idx, data in enumerate(train_loader):
-        points, labels = data['points'].to(device), data['labels'].to(device)
-        optimizer.zero_grad()
-        outputs, _, _ = model(points)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
-        
-        running_loss += loss.item()
-        if batch_idx % 10 == 9:  # print every 10 mini-batches
-            print('[Epoch: %d, Batch: %5d] loss: %.3f' %
-                  (epoch_index + 1, batch_idx + 1, running_loss / 10))
-            running_loss = 0.0
-
-    print('Epoch %d completed in %.2f seconds.' % (epoch_index + 1, time.time() - start_time))
 
 def train_one_epoch(model, train_loader, device, optimizer, criterion):
     model.train()
@@ -145,11 +130,11 @@ for epoch in range(epochs):
     print(f"Epoch {epoch+1}, Validation Loss: {val_loss}, Validation Accuracy: {val_accuracy}%")
     
 
-save_plot_loss_acc(train_accuracies, val_accuracies,run_name=run_name)
+save_plot_loss_acc(train_accuracies, val_accuracies,run_name=run_name,dir_path=dir_path)
 
 test_accuracy, all_preds, all_labels = test_model(model, test_loader, device)
 print(f"Test Accuracy: {test_accuracy}%")
 
-save_confusion_matrix(all_labels, all_preds, categories=train_dataset.categories,run_name=run_name)
+save_confusion_matrix(all_labels, all_preds, categories=train_dataset.categories,run_name=run_name,dir_path=dir_path)
 
-torch.save(best_model, f"../results/{run_name}/pointnet_model.pth")
+torch.save(best_model, f"{dir_path}/results/{run_name}/pointnet_model.pth")
