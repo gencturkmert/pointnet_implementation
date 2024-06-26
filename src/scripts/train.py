@@ -3,10 +3,13 @@ import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
+from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
+from torch.cuda.amp import autocast, GradScaler
+
 import numpy as np
 import time
 import math
@@ -16,24 +19,34 @@ from data.modelnet40 import ModelNet40Dataset
 from model.pointnet import PointNet
 from utils.plot import save_plot_loss_acc, save_confusion_matrix
 
-def train_one_epoch(model, train_loader, device, optimizer, criterion):
+def train_one_epoch(model, train_loader, device, optimizer, criterion, scaler):
     model.train()
     running_loss = 0.0
     total_correct = 0
     total = 0
-    for data, labels in train_loader:
+    
+    # Create a progress bar
+    progress_bar = tqdm(train_loader, desc="Training", leave=False)
+    
+    for data, labels in progress_bar:
         data, labels = data.to(device), labels.to(device)
 
         optimizer.zero_grad()
-        outputs, _, _ = model(data)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
+        with autocast():
+            outputs, _, _ = model(data)
+            loss = criterion(outputs, labels)
+        
+        scaler.scale(loss).backward()
+        scaler.step(optimizer)
+        scaler.update()
 
         _, predicted = torch.max(outputs, 1)
         total_correct += (predicted == labels).sum().item()
         total += labels.size(0)
         running_loss += loss.item()
+
+        # Update the progress bar description
+        progress_bar.set_postfix(loss=running_loss/len(train_loader), accuracy=total_correct/total*100)
 
     train_loss = running_loss / len(train_loader)
     train_accuracy = total_correct / total * 100
@@ -44,15 +57,23 @@ def validate(model, val_loader, device, criterion):
     total_correct = 0
     total = 0
     running_loss = 0.0
+    
+    # Create a progress bar
+    progress_bar = tqdm(val_loader, desc="Validation", leave=False)
+    
     with torch.no_grad():
-        for data, labels in val_loader:
+        for data, labels in progress_bar:
             data, labels = data.to(device), labels.to(device)
-            outputs, _, _ = model(data)
-            loss = criterion(outputs, labels)
+            with autocast():
+                outputs, _, _ = model(data)
+                loss = criterion(outputs, labels)
             _, predicted = torch.max(outputs, 1)
             total_correct += (predicted == labels).sum().item()
             total += labels.size(0)
             running_loss += loss.item()
+
+            # Update the progress bar description
+            progress_bar.set_postfix(loss=running_loss/len(val_loader), accuracy=total_correct/total*100)
 
     val_loss = running_loss / len(val_loader)
     val_accuracy = total_correct / total * 100
@@ -65,16 +86,23 @@ def test_model(model, test_loader, device):
     all_preds = []
     all_labels = []
 
+    # Create a progress bar
+    progress_bar = tqdm(test_loader, desc="Testing", leave=False)
+    
     with torch.no_grad():
-        for data, labels in test_loader:
+        for data, labels in progress_bar:
             data, labels = data.to(device), labels.to(device)
-            outputs, _, _ = model(data)
+            with autocast():
+                outputs, _, _ = model(data)
             _, predicted = torch.max(outputs, 1)
             total_correct += (predicted == labels).sum().item()
             total += labels.size(0)
             
             all_preds.extend(predicted.view(-1).cpu().numpy())
             all_labels.extend(labels.view(-1).cpu().numpy())
+
+            # Update the progress bar description
+            progress_bar.set_postfix(accuracy=total_correct/total*100)
 
     test_accuracy = total_correct / total * 100
     return test_accuracy, all_preds, all_labels
@@ -107,6 +135,7 @@ def main(num_points, num_classes, batch_size, epochs, dataset, dir_path, downloa
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = PointNet(num_classes=num_classes).to(device)
     criterion = nn.CrossEntropyLoss()
+    scaler = GradScaler()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
     train_losses, train_accuracies = [], []
@@ -115,7 +144,7 @@ def main(num_points, num_classes, batch_size, epochs, dataset, dir_path, downloa
     best_acc = -math.inf
 
     for epoch in range(epochs):
-        train_loss, train_accuracy = train_one_epoch(model, train_loader, device, optimizer, criterion)
+        train_loss, train_accuracy = train_one_epoch(model, train_loader, device, optimizer, criterion,scaler)
         val_loss, val_accuracy = validate(model, val_loader, device, criterion)
 
         train_losses.append(train_loss)
