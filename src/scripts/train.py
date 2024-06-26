@@ -79,7 +79,7 @@ def test_model(model, test_loader, device):
     test_accuracy = total_correct / total * 100
     return test_accuracy, all_preds, all_labels
 
-def main(num_points, num_classes, batch_size, epochs, dataset, dir_path):
+def main(num_points, num_classes, batch_size, epochs, dataset, dir_path, download):
     data_dir = f'{dir_path}/data'
     run_name = f"pointnet_{dataset}_{num_points}_{batch_size}_{epochs}"
 
@@ -89,13 +89,13 @@ def main(num_points, num_classes, batch_size, epochs, dataset, dir_path):
 
     # Create dataset instances for train, validation, and test
     if dataset == "modelnet10":
-        train_dataset = ModelNet10Dataset(root_dir=data_dir, num_points=num_points, split='train', split_ratio=0.8)
-        val_dataset = ModelNet10Dataset(root_dir=data_dir, num_points=num_points, split='validate', split_ratio=0.8)
-        test_dataset = ModelNet10Dataset(root_dir=data_dir, num_points=num_points, split='test', split_ratio=0.8)
+        train_dataset = ModelNet10Dataset(root_dir=data_dir,download=download, num_points=num_points, split='train', split_ratio=0.8)
+        val_dataset = ModelNet10Dataset(root_dir=data_dir, download=download,num_points=num_points, split='validate', split_ratio=0.8)
+        test_dataset = ModelNet10Dataset(root_dir=data_dir, download=download,num_points=num_points, split='test', split_ratio=0.8)
     elif dataset == "modelnet40":
-        train_dataset = ModelNet40Dataset(root_dir=data_dir, num_points=num_points, split='train', split_ratio=0.8)
-        val_dataset = ModelNet40Dataset(root_dir=data_dir, num_points=num_points, split='validate', split_ratio=0.8)
-        test_dataset = ModelNet40Dataset(root_dir=data_dir, num_points=num_points, split='test', split_ratio=0.8)
+        train_dataset = ModelNet40Dataset(root_dir=data_dir,download=download, num_points=num_points, split='train', split_ratio=0.8)
+        val_dataset = ModelNet40Dataset(root_dir=data_dir,download=download, num_points=num_points, split='validate', split_ratio=0.8)
+        test_dataset = ModelNet40Dataset(root_dir=data_dir, download=download,num_points=num_points, split='test', split_ratio=0.8)
     else:
         raise ValueError(f"Unknown dataset: {dataset}")
 
@@ -149,6 +149,7 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', type=int, default=100, help='number of epochs')
     parser.add_argument('--dataset', type=str, default='modelnet10', help='dataset to use (modelnet10 or modelnet40)')
     parser.add_argument('--dir_path', type=str, default='/content/drive/MyDrive/pointnet_torch', help='directory path for saving models and results')
+    parser.add_argument('--download', type=bool, help='download the dataset')
 
     args = parser.parse_args()
-    main(args.num_points, args.num_classes, args.batch_size, args.epochs, args.dataset, args.dir_path)
+    main(args.num_points, args.num_classes, args.batch_size, args.epochs, args.dataset, args.dir_path, args.download)

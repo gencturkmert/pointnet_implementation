@@ -1,4 +1,5 @@
 import os
+from pickle import FALSE
 import torch
 import numpy as np
 import zipfile
@@ -7,7 +8,7 @@ from torch.utils.data import Dataset
 from sklearn.model_selection import train_test_split
 
 class ModelNet10Dataset(Dataset):
-    def __init__(self, root_dir, num_points=1024, download=True, augment=False, split='train', split_ratio=0.8):
+    def __init__(self, root_dir, num_points=1024, download=False, augment=False, split='train', split_ratio=0.8):
         self.root_dir = root_dir
         self.num_points = num_points
         self.augment = augment
@@ -21,20 +22,21 @@ class ModelNet10Dataset(Dataset):
         # Load all filepaths initially
         temp_filepaths = []
         categories = [folder for folder in os.listdir(os.path.join(self.root_dir, "ModelNet10")) if os.path.isdir(os.path.join(self.root_dir, "ModelNet10", folder))]
+        self.categories = categories  # Keep track of categories
         for category in categories:
-            folder = os.path.join(self.root_dir, "ModelNet10", category, 'train')
+            if split in ['train', 'validate']:
+                folder = os.path.join(self.root_dir, "ModelNet10", category, 'train')
+            elif split == 'test':
+                folder = os.path.join(self.root_dir, "ModelNet10", category, 'test')
             files = [os.path.join(folder, file) for file in os.listdir(folder) if file.endswith('.off')]
-            temp_filepaths.extend(files)
+            temp_filepaths.extend([(file, categories.index(category)) for file in files])  # Store file paths and their corresponding labels
 
-        # Split the data
-        train_paths, test_paths = train_test_split(temp_filepaths, train_size=split_ratio, test_size=1-split_ratio, random_state=42)
         if split == 'train':
-            self.filepaths = train_paths
-        elif split == 'test':
-            self.filepaths = test_paths
+            self.filepaths, _ = train_test_split(temp_filepaths, train_size=split_ratio, test_size=1-split_ratio, random_state=42)
         elif split == 'validate':
-            # Further split the train_paths for validation
-            self.filepaths, _ = train_test_split(train_paths, train_size=split_ratio, test_size=1-split_ratio, random_state=42)
+            _, self.filepaths = train_test_split(temp_filepaths, train_size=split_ratio, test_size=1-split_ratio, random_state=42)
+        else:  # split == 'test'
+            self.filepaths = temp_filepaths
 
     def download(self):
         if not os.path.exists(self.root_dir):
@@ -73,8 +75,8 @@ class ModelNet10Dataset(Dataset):
             for line in lines[2:2 + num_vertices]:
                 parts = line.strip().split()
                 vertices.append([float(part) for part in parts])
+        print(f"Loaded {len(vertices)} vertices from {filepath}")
         return np.array(vertices)
-
 
     def sample_points(self, points):
         if len(points) == 0:
