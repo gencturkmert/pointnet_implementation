@@ -178,7 +178,7 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', type=int, default=100, help='number of epochs')
     parser.add_argument('--dataset', type=str, default='modelnet10', help='dataset to use (modelnet10 or modelnet40)')
     parser.add_argument('--dir_path', type=str, default='/content/drive/MyDrive/pointnet_torch', help='directory path for saving models and results')
-    parser.add_argument('--download', type=bool, help='download the dataset')
+    parser.add_argument('--download', type=int, help='download the dataset')
 
     args = parser.parse_args()
-    main(args.num_points, args.num_classes, args.batch_size, args.epochs, args.dataset, args.dir_path, args.download)
+    main(args.num_points, args.num_classes, args.batch_size, args.epochs, args.dataset, args.dir_path, args.download==1)
