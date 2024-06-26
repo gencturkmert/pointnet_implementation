@@ -136,7 +136,7 @@ def main(num_points, num_classes, batch_size, epochs, dataset, dir_path, downloa
     model = PointNet(num_classes=num_classes).to(device)
     criterion = nn.CrossEntropyLoss()
     scaler = GradScaler()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
     train_losses, train_accuracies = [], []
     val_losses, val_accuracies = [], []
