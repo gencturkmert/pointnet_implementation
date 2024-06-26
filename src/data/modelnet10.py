@@ -64,13 +64,19 @@ class ModelNet10Dataset(Dataset):
         vertices = []
         with open(filepath, 'r') as file:
             lines = file.readlines()
-            for line in lines:
-                if line.startswith('vertex'):
-                    parts = line.split()[1:]
-                    vertices.append([float(part) for part in parts])
+            if lines[0].strip() != 'OFF':
+                raise ValueError('Not a valid OFF file')
+            parts = lines[1].strip().split()
+            num_vertices = int(parts[0])
+            for line in lines[2:2 + num_vertices]:
+                parts = line.strip().split()
+                vertices.append([float(part) for part in parts])
         return np.array(vertices)
 
+
     def sample_points(self, points):
+        if len(points) == 0:
+            raise ValueError("No points found in the mesh")
         if len(points) >= self.num_points:
             idx = np.random.choice(len(points), self.num_points, replace=False)
         else:
