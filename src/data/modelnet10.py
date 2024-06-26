@@ -75,7 +75,7 @@ class ModelNet10Dataset(Dataset):
             for line in lines[2:2 + num_vertices]:
                 parts = line.strip().split()
                 vertices.append([float(part) for part in parts])
-        print(f"Loaded {len(vertices)} vertices from {filepath}")
+        #print(f"Loaded {len(vertices)} vertices from {filepath}")
         return np.array(vertices)
 
     def sample_points(self, points):
