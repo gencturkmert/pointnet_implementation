@@ -53,12 +53,14 @@ class ModelNet10Dataset(Dataset):
         return len(self.filepaths)
 
     def __getitem__(self, idx):
-        filepath = self.filepaths[idx]
+        filepath, label = self.filepaths[idx]
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f"File {filepath} does not exist")
         points = self.load_mesh(filepath)
         points = self.sample_points(points)
         if self.augment:
             points = self.augment_points(points)
-        return torch.tensor(points, dtype=torch.float)
+        return torch.tensor(points, dtype=torch.float), label
 
     def load_mesh(self, filepath):
         vertices = []
