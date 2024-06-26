@@ -62,7 +62,8 @@ class ModelNet40Dataset(Dataset):
         points = self.sample_points(points)
         if self.augment:
             points = self.augment_points(points)
-        return torch.tensor(points, dtype=torch.float), label
+        point_cloud = torch.tensor(points, dtype=torch.float)
+        return self.normalize_point_cloud(point_cloud), label
 
     def load_mesh(self, filepath):
         vertices = []
@@ -86,6 +87,24 @@ class ModelNet40Dataset(Dataset):
         else:
             idx = np.random.choice(len(points), self.num_points, replace=True)
         return points[idx]
+    
+    def normalize_point_cloud(self,point_cloud):
+        """
+        Normalize the point cloud to fit within a unit sphere.
+        Args:
+            point_cloud (torch.Tensor): Tensor of shape (N, 3), where N is the number of points.
+        Returns:
+            torch.Tensor: Normalized point cloud.
+        """
+        # Compute the centroid
+        centroid = torch.mean(point_cloud, dim=0)
+        # Center the point cloud
+        point_cloud = point_cloud - centroid
+        # Compute the furthest distance from the centroid
+        max_distance = torch.max(torch.sqrt(torch.sum(point_cloud ** 2, dim=1)))
+        # Scale the point cloud to fit within a unit sphere
+        point_cloud = point_cloud / max_distance
+        return point_cloud
 
     def augment_points(self, points):
         angle = np.random.uniform(0, 2 * np.pi)
