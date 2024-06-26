@@ -105,7 +105,7 @@ def main(num_points, num_classes, batch_size, epochs, dataset, dir_path):
 
     # Create model, loss, and optimizer instances
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = PointNet(num_points=num_points, num_classes=num_classes).to(device)
+    model = PointNet(num_classes=num_classes).to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
