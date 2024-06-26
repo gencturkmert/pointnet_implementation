@@ -7,12 +7,13 @@ from torch.utils.data import Dataset
 from sklearn.model_selection import train_test_split
 
 class ModelNet40Dataset(Dataset):
-    def __init__(self, root_dir, num_points=1024, download=True, augment=False, split='train', split_ratio=0.8):
+    def __init__(self, root_dir, url, num_points=1024, download=True, augment=False, split='train', split_ratio=0.8):
         self.root_dir = root_dir
         self.num_points = num_points
         self.augment = augment
         self.split = split
         self.filepaths = []
+        self.url = "http://modelnet.cs.princeton.edu/ModelNet40.zip"
 
         if download:
             self.download()

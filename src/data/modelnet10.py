@@ -13,6 +13,7 @@ class ModelNet10Dataset(Dataset):
         self.augment = augment
         self.split = split
         self.filepaths = []
+        self.url = "http://modelnet.cs.princeton.edu/ModelNet10.zip"
 
         if download:
             self.download()
