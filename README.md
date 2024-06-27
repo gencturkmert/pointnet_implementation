@@ -1,5 +1,4 @@
-<b> UNDER CONSTRUCTION, WORK NOT FINISHED <\b>
-
+<b> UNDER CONSTRUCTION, WORK NOT FINISHED
 # PointNet Implementation
 Created by Charles R. Qi, Hao Su, Kaichun Mo, Leonidas J. Guibas from Stanford University. 
 
