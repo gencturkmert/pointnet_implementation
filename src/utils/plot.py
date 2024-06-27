@@ -18,7 +18,7 @@ def save_confusion_matrix(all_labels, all_preds, categories,run_name, dir_path):
     plt.xlabel('Predicted')
     
     # Save the plot
-    plt.savefig(os.path.join(dir_path, f'/{run_name}/results/confusion_matrix.png'))
+    plt.savefig(os.path.join(f'{dir_path}/{run_name}/results', 'cm.png'))
     plt.close()
     
 def save_plot_loss_acc(train_accuracies, val_accuracies, run_name,dir_path):
@@ -31,5 +31,5 @@ def save_plot_loss_acc(train_accuracies, val_accuracies, run_name,dir_path):
     plt.legend()
     
     # Save the plot
-    plt.savefig(os.path.join(dir_path, f'/{run_name}/results/accuracy_plot.png'))
+    plt.savefig(os.path.join(f'{dir_path}/{run_name}/results', 'accuracy_plot.png'))
     plt.close()
