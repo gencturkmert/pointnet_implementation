@@ -10,6 +10,5 @@ This work is based on [this](https://arxiv.org/abs/1612.00593) paper. It propose
 
 ModelNet10 - Classification
 ![accuracy_plot](https://github.com/gencturkmert/pointnet_implementation/assets/91569858/c1d41af7-f165-43bf-bad8-171027b60688)
+Test Accuracy: 82.93%
 
-
-![cm](https://github.com/gencturkmert/pointnet_implementation/assets/91569858/28853753-10d4-47f0-8a1a-eb217d2e8e3d)
