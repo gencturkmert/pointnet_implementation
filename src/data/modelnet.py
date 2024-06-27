@@ -4,30 +4,43 @@ import torch
 import numpy as np
 import zipfile
 import urllib.request
+from torch.serialization import normalize_storage_type
 from torch.utils.data import Dataset
 from sklearn.model_selection import train_test_split
 
-class ModelNet40Dataset(Dataset):
-    def __init__(self, root_dir, num_points=1024, download=False, augment=False, split='train', split_ratio=0.8):
+class ModelNetDataset(Dataset):
+    def __init__(self, root_dir, num_points=1024, download=False, augment=False, split='train', split_ratio=0.8, normalize=True,dataset='ModelNet10'):
         self.root_dir = root_dir
         self.num_points = num_points
         self.augment = augment
         self.split = split
         self.filepaths = []
-        self.url = "http://modelnet.cs.princeton.edu/ModelNet40.zip"  # Updated URL
+        self.dataset = dataset
+        
+        if dataset == 'ModelNet40':
+            self.url = "http://modelnet.cs.princeton.edu/ModelNet40.zip"
+        elif dataset == 'ModelNet10':
+            self.url = "http://3dvision.princeton.edu/projects/2014/3DShapeNets/ModelNet10.zip"
+        else:
+            raise ValueError("Invalid dataset. Choose either 'ModelNet10' or 'ModelNet40'.")
+
+        dataset_path = os.path.join(self.root_dir, self.dataset)
+        if not os.path.exists(dataset_path):
+            print(f"Dataset {self.dataset} not found in {self.root_dir}.")
+            download = True
 
         if download:
             self.download()
 
         # Load all filepaths initially
         temp_filepaths = []
-        categories = [folder for folder in os.listdir(os.path.join(self.root_dir, "ModelNet40")) if os.path.isdir(os.path.join(self.root_dir, "ModelNet40", folder))]
+        categories = [folder for folder in os.listdir(os.path.join(self.root_dir, self.dataset)) if os.path.isdir(os.path.join(self.root_dir, "ModelNet10", folder))]
         self.categories = categories  # Keep track of categories
         for category in categories:
             if split in ['train', 'validate']:
-                folder = os.path.join(self.root_dir, "ModelNet40", category, 'train')
+                folder = os.path.join(self.root_dir, self.dataset, category, 'train')
             elif split == 'test':
-                folder = os.path.join(self.root_dir, "ModelNet40", category, 'test')
+                folder = os.path.join(self.root_dir, self.dataset, category, 'test')
             files = [os.path.join(folder, file) for file in os.listdir(folder) if file.endswith('.off')]
             temp_filepaths.extend([(file, categories.index(category)) for file in files])  # Store file paths and their corresponding labels
 
@@ -41,9 +54,9 @@ class ModelNet40Dataset(Dataset):
     def download(self):
         if not os.path.exists(self.root_dir):
             os.makedirs(self.root_dir)
-        zip_path = os.path.join(self.root_dir, 'ModelNet40.zip')
+        zip_path = os.path.join(self.root_dir, f'{self.dataset}.zip')
         if not os.path.exists(zip_path):
-            print("Downloading ModelNet40 dataset...")
+            print(f"Downloading {self.dataset} dataset...")
             urllib.request.urlretrieve(self.url, zip_path)
             print("Download complete.")
         print("Extracting files...")
@@ -87,22 +100,11 @@ class ModelNet40Dataset(Dataset):
         else:
             idx = np.random.choice(len(points), self.num_points, replace=True)
         return points[idx]
-    
+
     def normalize_point_cloud(self,point_cloud):
-        """
-        Normalize the point cloud to fit within a unit sphere.
-        Args:
-            point_cloud (torch.Tensor): Tensor of shape (N, 3), where N is the number of points.
-        Returns:
-            torch.Tensor: Normalized point cloud.
-        """
-        # Compute the centroid
         centroid = torch.mean(point_cloud, dim=0)
-        # Center the point cloud
         point_cloud = point_cloud - centroid
-        # Compute the furthest distance from the centroid
         max_distance = torch.max(torch.sqrt(torch.sum(point_cloud ** 2, dim=1)))
-        # Scale the point cloud to fit within a unit sphere
         point_cloud = point_cloud / max_distance
         return point_cloud
 

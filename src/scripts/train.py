@@ -14,8 +14,7 @@ import numpy as np
 import time
 import math
 
-from data.modelnet10 import ModelNet10Dataset
-from data.modelnet40 import ModelNet40Dataset
+from src.data.modelnet import ModelNetDataset
 from model.pointnet import PointNet
 from utils.plot import save_plot_loss_acc, save_confusion_matrix
 
@@ -107,7 +106,7 @@ def test_model(model, test_loader, device):
     test_accuracy = total_correct / total * 100
     return test_accuracy, all_preds, all_labels
 
-def main(num_points, num_classes, batch_size, epochs, dataset, dir_path, download):
+def main(num_points, num_classes, batch_size, epochs, dataset, dir_path, download, normalize):
     data_dir = f'{dir_path}/data'
     run_name = f"pointnet_{dataset}_{num_points}_{batch_size}_{epochs}"
 
@@ -116,16 +115,10 @@ def main(num_points, num_classes, batch_size, epochs, dataset, dir_path, downloa
     os.makedirs(f"{dir_path}/{run_name}/results", exist_ok=True)
 
     # Create dataset instances for train, validation, and test
-    if dataset == "modelnet10":
-        train_dataset = ModelNet10Dataset(root_dir=data_dir,download=download, num_points=num_points, split='train', split_ratio=0.8)
-        val_dataset = ModelNet10Dataset(root_dir=data_dir, download=download,num_points=num_points, split='validate', split_ratio=0.8)
-        test_dataset = ModelNet10Dataset(root_dir=data_dir, download=download,num_points=num_points, split='test', split_ratio=0.8)
-    elif dataset == "modelnet40":
-        train_dataset = ModelNet40Dataset(root_dir=data_dir,download=download, num_points=num_points, split='train', split_ratio=0.8)
-        val_dataset = ModelNet40Dataset(root_dir=data_dir,download=download, num_points=num_points, split='validate', split_ratio=0.8)
-        test_dataset = ModelNet40Dataset(root_dir=data_dir, download=download,num_points=num_points, split='test', split_ratio=0.8)
-    else:
-        raise ValueError(f"Unknown dataset: {dataset}")
+    train_dataset = ModelNetDataset(root_dir=data_dir,download=download, num_points=num_points, split='train', split_ratio=0.8,dataset=dataset,normalize=normalize)
+    val_dataset = ModelNetDataset(root_dir=data_dir, download=download,num_points=num_points, split='validate', split_ratio=0.8,dataset=dataset,normalize=normalize)
+    test_dataset = ModelNetDataset(root_dir=data_dir, download=download,num_points=num_points, split='test', split_ratio=0.8,dataset=dataset,normalize=normalize)
+
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=2)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=2)
@@ -176,9 +169,10 @@ if __name__ == '__main__':
     parser.add_argument('--num_classes', type=int, default=40, help='number of output classes')
     parser.add_argument('--batch_size', type=int, default=32, help='batch size')
     parser.add_argument('--epochs', type=int, default=100, help='number of epochs')
-    parser.add_argument('--dataset', type=str, default='modelnet10', help='dataset to use (modelnet10 or modelnet40)')
+    parser.add_argument('--dataset', type=str, default='ModelNet10', help='dataset to use (modelnet10 or modelnet40)')
     parser.add_argument('--dir_path', type=str, default='/content/drive/MyDrive/pointnet_torch', help='directory path for saving models and results')
     parser.add_argument('--download', type=int, help='download the dataset')
+    parser.add_argument('--normalize', type=int, default=1, help='normalize the point cloud data')
 
     args = parser.parse_args()
-    main(args.num_points, args.num_classes, args.batch_size, args.epochs, args.dataset, args.dir_path, args.download==1)
+    main(args.num_points, args.num_classes, args.batch_size, args.epochs, args.dataset, args.dir_path, args.download==1, args.normalize==1)
