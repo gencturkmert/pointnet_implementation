@@ -14,7 +14,7 @@ class ModelNet40Dataset(Dataset):
         self.augment = augment
         self.split = split
         self.filepaths = []
-        self.url = "http://3dvision.princeton.edu/projects/2014/3DShapeNets/ModelNet40.zip"  # Updated URL
+        self.url = "http://modelnet.cs.princeton.edu/ModelNet40.zip"  # Updated URL
 
         if download:
             self.download()
