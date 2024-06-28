@@ -29,6 +29,7 @@ def save_plot_loss_acc(train_accuracies, val_accuracies, run_name,dir_path):
     plt.ylabel('Accuracy')
     plt.title('Training and Validation Accuracy')
     plt.legend()
+    plt.grid()
     
     # Save the plot
     plt.savefig(os.path.join(f'{dir_path}/{run_name}/results', 'accuracy_plot.png'))
