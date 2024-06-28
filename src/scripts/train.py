@@ -14,7 +14,7 @@ import numpy as np
 import time
 import math
 
-from src.data.modelnet import ModelNetDataset
+from data.modelnet import ModelNetDataset
 from model.pointnet import PointNet
 from utils.plot import save_plot_loss_acc, save_confusion_matrix
 
