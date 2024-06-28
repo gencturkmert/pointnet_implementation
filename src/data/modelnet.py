@@ -78,26 +78,26 @@ class ModelNetDataset(Dataset):
         point_cloud = torch.tensor(points, dtype=torch.float)
         return self.normalize_point_cloud(point_cloud), label
 
-def load_mesh(self, filepath):
-    vertices = []
-    with open(filepath, 'r') as file:
-        lines = file.readlines()
-        header = lines[0].strip()
-        if header.startswith('OFF'):
-            if header == 'OFF':
-                parts = lines[1].strip().split()
+    def load_mesh(self, filepath):
+        vertices = []
+        with open(filepath, 'r') as file:
+            lines = file.readlines()
+            header = lines[0].strip()
+            if header.startswith('OFF'):
+                if header == 'OFF':
+                    parts = lines[1].strip().split()
+                else:
+                    parts = header[3:].strip().split()
             else:
-                parts = header[3:].strip().split()
-        else:
-            raise ValueError(f'Not a valid OFF file {filepath}')
+                raise ValueError(f'Not a valid OFF file {filepath}')
 
-        num_vertices = int(parts[0]) 
-        num_faces = int(parts[1])    
-        for line in lines[2:2 + num_vertices]:
-            parts = line.strip().split()
-            vertices.append([float(part) for part in parts])
+            num_vertices = int(parts[0]) 
+            num_faces = int(parts[1])    
+            for line in lines[2:2 + num_vertices]:
+                parts = line.strip().split()
+                vertices.append([float(part) for part in parts])
 
-    return np.array(vertices)
+        return np.array(vertices)
 
 
     def sample_points(self, points):
