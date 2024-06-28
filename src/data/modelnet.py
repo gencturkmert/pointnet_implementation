@@ -83,7 +83,7 @@ class ModelNetDataset(Dataset):
         with open(filepath, 'r') as file:
             lines = file.readlines()
             if lines[0].strip() != 'OFF':
-                raise ValueError('Not a valid OFF file')
+                raise ValueError(f'Not a valid OFF file {filepath}')
             parts = lines[1].strip().split()
             num_vertices = int(parts[0])
             for line in lines[2:2 + num_vertices]:
