@@ -13,3 +13,4 @@ Test Accuracy: 82.93%
 
 ModelNet40 - Classification
 ![accuracy_plot (1)](https://github.com/gencturkmert/pointnet_implementation/assets/91569858/83866ebe-069d-4318-aa9e-2daa89f18d6d)
+Test Accuracy: 81.17%
